@@ -1,0 +1,97 @@
+using UnityEngine;
+ using UnityEngine.UI; 
+
+public class FallGuysMove : MonoBehaviour
+{
+    [SerializeField] float speed;
+    [SerializeField] float jumpSpeed;
+    [SerializeField] int marshrom;
+     [SerializeField] Text ScoreText;
+    Animator anim; //Добавляем ссылку на аниматор
+    Rigidbody rb;
+    Vector3 direction;
+    Vector3 startPosition = new Vector3(5.2f, 2f, -15.3f);
+    bool isGrounded;
+    bool slide;
+    void Start()
+
+    {
+        rb = GetComponent<Rigidbody>();
+        anim = GetComponent<Animator>(); //Присваем компонент Animator
+        startPosition=transform.position;
+        
+    }
+    void Update()
+    {
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
+        direction = transform.TransformDirection(x, 0, z);
+        
+        //меняем анимацию персонажа
+        if (direction.magnitude > 0)
+        {
+            anim.SetBool("Run", true);
+        }
+        else anim.SetBool("Run", false);
+        //
+        
+        if(isGrounded)
+        {
+            if(Input.GetKeyDown(KeyCode.Space))
+            {                
+                rb.AddForce(new Vector3(0, jumpSpeed, 0), ForceMode.Impulse);
+            }
+        }   
+        if(slide)
+{
+    rb.AddForce(direction * 0.03f, ForceMode.VelocityChange);
+}    
+    }
+    private void FixedUpdate()
+    {
+        rb.MovePosition(transform.position + direction * speed * Time.fixedDeltaTime);
+    }
+
+    private void OnCollisionStay(Collision other)
+    {
+        if (other != null)
+        {
+            isGrounded = true;
+        }
+        //если на коллайдере под нами есть тэг slide
+    if (other.gameObject.CompareTag("slide"))
+    {
+    //то 
+        slide = true;
+    }
+    else slide = false;
+        
+    }
+    private void OnCollisionExit(Collision other)
+    {
+        isGrounded = false;
+    }
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("plate"))
+        {
+            Destroy(other.gameObject);
+        }
+        if(other.CompareTag("Respawn"))
+        {
+            transform.position=startPosition;
+        }
+        if(other.CompareTag("Checkpoint"))
+        {
+            startPosition=transform.position;
+        }
+        if (other.CompareTag("marshrom")) //Проверяем столкновение с определенным тэгом объекта
+        {
+            marshrom += 1;
+            Destroy(other.gameObject);
+            ScoreText.text = marshrom.ToString();
+        }
+    
+  
+    }
+}
